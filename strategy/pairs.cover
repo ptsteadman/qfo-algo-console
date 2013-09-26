@@ -1,0 +1,27 @@
+    2: class Pairs(object):
+           """ Trade based on changes in another stock/equity
+       
+               To instantiate a strategy that will SHORT target equity if 
+               the parameter equity crosses the upper bollinger band, and BUY 
+               the target equity if the parameter equity crosses the lower band:
+            
+           >>> vixPair = Pairs(VXX,20,1)
+       
+           (Parameter equity is VXX, and 20 day moving average / 1 standard deviation 
+            for the bollinger band.)
+    1:     """
+       
+    1:     def __init__(self, pair, n, k):
+    1:         self.n = n
+    1:         self.k = k
+    1:         self.pair = pair
+       
+    1:     def __call__(self, tick):
+               for t in self.pair:
+                   if t.date == tick.date:
+                       if t.close > t.upper_bb(self.n, self.k):
+                           return 'sell'
+                       elif t.close < t.lower_bb(self.n, self.k):
+                           return 'buy'
+       
+       

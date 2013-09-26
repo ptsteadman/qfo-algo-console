@@ -1,0 +1,17 @@
+    1: import random
+       
+    2: class Monkey(object):
+           """ Silly monkey strategy every freq tick roll the dice
+       
+           To instantiate a 30 tick monkey:
+       
+           >>> monkey = Monkey(30)
+    1:     """
+       
+    1:     def __init__(self, freq):
+               self.freq = freq
+       
+    1:     def __call__(self, tick):
+               if tick.index % self.freq:
+                   return None
+               return random.choice(('buy', 'sell', None))

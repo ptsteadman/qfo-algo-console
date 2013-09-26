@@ -1,0 +1,10 @@
+    2: class Buy(object):
+           """ Buy and hold benchmark strategy.
+       
+           To instantiate a 30 tick monkey:
+       
+           >>> buy = Buy()
+    1:     """
+    1:     def __call__(self,tick):
+               if tick.index == 0:
+                   return 'buy'

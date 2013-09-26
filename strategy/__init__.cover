@@ -1,0 +1,24 @@
+       """
+       Use this folder to define your trading strategies.
+       
+       A strategy is a callable object taking a Tick (cf. lib/tick.py) as an
+       argument and returns 'buy', 'sell' or None.
+       
+       Use __init__(self, ...) to define the strategy parameters at instantiation e.g.
+       the Bollinger band strategy takes 2 parameters the period N and the width of
+       the band K : Bollinger(N, K)
+       
+       >>> bollinger = Bollinger(30, 1)
+       
+       Define your strategy in the magic method __call__(self, tick) in order to be
+       able to call the strategy with a Tick.
+       
+       >>> bollinger(tick) #doctest: +SKIP
+       'sell'
+    1: """
+       
+    1: from bollinger import Bollinger
+    1: from monkey import Monkey
+    1: from pairs import Pairs
+    1: from buy import Buy
+    1: from short import Short

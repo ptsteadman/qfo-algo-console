@@ -1,0 +1,104 @@
+    1: import datetime
+    1: import cPickle as pickle
+    1: import re
+       
+    1: from ext.ystockquote import get_historical_prices
+    1: from matplotlib.pyplot import plot, savefig, clf
+       
+    1: from tick import Tick
+       
+       
+    2: class Stock(object):
+           """ List like stock data for a given symbol
+       
+           Loads from Yahoo when instantiated unless cache is available.
+       
+           >>> goog = Stock('GOOG')
+           >>> goog
+           Stock(symbol=GOOG, data=[1958])
+           >>> isinstance(goog[0], Tick)
+           True
+    1:     """
+       
+    1:     def __init__(self, symbol=None, yahoo=get_historical_prices):
+    4:         self.yahoo = yahoo
+    4:         self.symbol = symbol
+    4:         self.data = []
+    4:         if symbol is not None:
+    4:             self.load(symbol)
+       
+    1:     def __repr__(self):
+               return "Stock(symbol={0}, data=[{1}])".format(self.symbol, len(self.data))
+       
+    1:     def load(self, symbol):
+               """ Loads the stock quote for symbol from Yahoo or cache """
+    4:         raw = Stock.get_from_cache(symbol)
+    4:         if raw is None:
+                   today = datetime.date.today().strftime('%Y%m%d')
+                   raw = self.yahoo(symbol, '20010103', today)
+                   Stock.save_to_cache(symbol, raw)
+               # Tick aware of the time series it belongs to
+    4:         self.data.extend(
+    4:             [ Tick(self.data, index, *Stock.cast(tick))
+                     for index, tick
+ 9068:               in enumerate(reversed(raw[1:])) ])
+       
+    1:     @staticmethod
+           def get_from_cache(symbol):
+               """ Get the date for symbol from cache return list or none """
+    4:         try:
+    4:             with open('cache/{0}_{1}'.format(symbol, datetime.date.today())) as f:
+    4:                 return pickle.load(f)
+               except (IOError, EOFError):
+                   return None
+       
+    1:     @staticmethod
+           def save_to_cache(symbol, raw):
+               """ Save the data coming from Yahoo into cache """
+               f = open('cache/{0}_{1}'.format(symbol, datetime.date.today()), 'w')
+               pickle.dump(raw, f)
+       
+    1:     @staticmethod
+           def cast(raw_tick):
+               """ Cast the data from a Yahoo raw tick into relevant types
+       
+               >>> Stock.cast(('2012-05-25', '1.0'))
+               [datetime.date(2012, 5, 25), 1.0]
+               """
+ 9064:         result = [ datetime.date(*map(int, raw_tick[0].split('-'))) ]
+ 9064:         result.extend( map(float, raw_tick[1:]) )
+ 9064:         return result
+       
+    1:     def __iter__(self):
+               for tick in self.data:
+                   yield tick
+       
+    1:     def __getitem__(self, index):
+               return self.data[index]
+       
+    1:     def __len__(self):
+               return len(self.data)
+       
+    1:     def plot(self, *args):
+               """ Save a plot of Tick args under the name symbol.png
+       
+               To get a plot of close, upper and lover bollinger band for N=30 and K=1
+               for GOOG
+       
+               >>> Stock('GOOG').plot('close', 'upper_bb(30, 1)', 'lower_bb(30, 1)') #doctest: +SKIP
+               """
+               for value in args:
+                   match = re.match(r"(?P<method>\w+)(?P<parameters>\(.*\))?", value)
+                   dict_ = match.groupdict()
+                   method = dict_['method']
+                   parameters = None
+                   if dict_['parameters']:
+                       parameters = map(int, dict_['parameters'][1:-1].split(','))
+                   if parameters:
+                       plot([t.date for t in self],
+                            [getattr(t, method)(*parameters) for t in self])
+                   else:
+                       plot([t.date for t in self],
+                            [getattr(t, method) for t in self])
+               savefig('png/{0}.png'.format(self.symbol))
+               clf()
